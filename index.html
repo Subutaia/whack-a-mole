@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug Bash!</title>
+  <style>
+    body {
+      background: #111;
+      color: #8f8;
+      font-family: monospace;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      font-size: 2em;
+      margin: 20px 0;
+    }
+    .score-time {
+      display: flex;
+      justify-content: space-between;
+      margin: 0 30px;
+      font-size: 1.2em;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 80px);
+      grid-template-rows: repeat(3, 80px);
+      gap: 15px;
+      justify-content: center;
+      margin: 30px auto;
+    }
+    .hole {
+      width: 80px;
+      height: 80px;
+      border: 2px solid #444;
+      border-radius: 50%;
+      position: relative;
+      cursor: pointer;
+    }
+    .bug {
+      font-size: 2em;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      user-select: none;
+    }
+    .squashed {
+      color: #f44;
+      content: "💥";
+    }
+    .end {
+      font-size: 1.5em;
+      margin-top: 20px;
+    }
+    button {
+      background: #222;
+      color: #8f8;
+      border: 2px solid #8f8;
+      padding: 8px 16px;
+      font-size: 1em;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="score-time">
+    <div>Score: <span id="score">0</span></div>
+    <div>⏱ <span id="time">10</span>s</div>
+  </div>
+
+  <h1>BUG BASH!</h1>
+
+  <div class="grid" id="grid">
+    <!-- 12 holes for bugs -->
+  </div>
+
+  <div class="end" id="endMessage"></div>
+  <button onclick="startGame()">Start Game</button>
+
+  <script>
+    const grid = document.getElementById('grid');
+    const scoreEl = document.getElementById('score');
+    const timeEl = document.getElementById('time');
+    const endMessage = document.getElementById('endMessage');
+
+    const bugChar = "🐞";
+    const squashedChar = "💥";
+    const totalTime = 3;
+
+    let score = 0;
+    let timeLeft = totalTime;
+    let gameInterval, timerInterval;
+    let holes = [];
+
+    // Create 12 holes
+    for (let i = 0; i < 12; i++) {
+      const hole = document.createElement('div');
+      hole.classList.add('hole');
+      grid.appendChild(hole);
+      holes.push(hole);
+    }
+
+    function randomHole() {
+      return holes[Math.floor(Math.random() * holes.length)];
+    }
+
+    function showBug() {
+      if (timeLeft <= 0) return;
+
+      const hole = randomHole();
+
+      // Avoid stacking bugs
+      if (hole.querySelector('.bug')) return;
+
+      const bug = document.createElement('div');
+      bug.classList.add('bug');
+      bug.textContent = bugChar;
+
+      bug.onclick = () => {
+        bug.textContent = squashedChar;
+        bug.classList.add('squashed');
+        bug.onclick = null;
+        score += 10;
+        scoreEl.textContent = score;
+
+        setTimeout(() => {
+          hole.innerHTML = '';
+        }, 500);
+      };
+
+      hole.appendChild(bug);
+
+      setTimeout(() => {
+        if (hole.contains(bug)) hole.innerHTML = '';
+      }, 1500);
+    }
+
+    function startGame() {
+      score = 0;
+      timeLeft = totalTime;
+      scoreEl.textContent = score;
+      timeEl.textContent = timeLeft;
+      endMessage.textContent = '';
+
+      clearInterval(gameInterval);
+      clearInterval(timerInterval);
+
+      gameInterval = setInterval(showBug, 500);
+
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        timeEl.textContent = timeLeft;
+        if (timeLeft <= 0) endGame();
+      }, 1000);
+    }
+
+    function endGame() {
+      clearInterval(gameInterval);
+      clearInterval(timerInterval);
+      holes.forEach(hole => hole.innerHTML = '');
+      endMessage.textContent = `Game Over! Final Score: ${score}`;
+    }
+  </script>
+</body>
+</html>
